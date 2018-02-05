@@ -22,9 +22,7 @@ namespace DefaultFunction
             string content = await req.Content.ReadAsStringAsync();
 
             log.Info("Reçu : " + content);
-            //MatchState state = JsonConvert.DeserializeObject<MatchState>(content);
             XNode node = JsonConvert.DeserializeXNode(content, "MatchState");
-            List<TurnAction> actions = new List<TurnAction>();
 
             string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["IADatabase"].ConnectionString;
 
@@ -42,15 +40,22 @@ namespace DefaultFunction
                     {
                         if (await reader.ReadAsync())
                         {
-                            XmlDocument doc = new XmlDocument();
-                            doc.LoadXml(reader.GetString(0));
-                            return req.CreateResponse(HttpStatusCode.OK, JsonConvert.SerializeXmlNode(doc));
+                            var responseMessage = new HttpResponseMessage(HttpStatusCode.OK);
+                            responseMessage.Content = new StringContent(reader.GetString(0), System.Text.Encoding.UTF8, "application/xml");
+                            return responseMessage;
+                        }
+                        else
+                        {
+                            return req.CreateErrorResponse(HttpStatusCode.InternalServerError, "error");
                         }
                     }
                 }
             }
+            //List<TurnAction> actions = new List<TurnAction>();
+            //MatchState state = JsonConvert.DeserializeObject<MatchState>(content);
 
-            return req.CreateErrorResponse(HttpStatusCode.InternalServerError, "error");
+            //actions.Add(new TurnAction { Action = ActionTurnType.move, Player = state.Field.Players.FirstOrDefault(), Target = new Coordinate(4, 7) });
+            //return req.CreateResponse(HttpStatusCode.OK, actions);
         }
     }
 }
